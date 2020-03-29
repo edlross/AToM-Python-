@@ -1,4 +1,4 @@
-##*ATOM Technology* (Documentation)
+## *ATOM Technology* (Documentation)
 
 
 ### Edward Ross
