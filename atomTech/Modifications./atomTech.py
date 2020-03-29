@@ -87,8 +87,8 @@ def callback(in_data, frame_count, time_info, flag):
         # print("On?")
         on = Message('note_on', note=note)
         # print('Sending {}'.format(on))
-        if isNoteOn == True
-            port.send(on)
+        # if isNoteOn == True
+        port.send(on)
         
         # off = Message('note_off', note=note)
         # print('Sending {}'.format(off))

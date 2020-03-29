@@ -1,4 +1,5 @@
 # PURPOSE: To fix the issue with note length being the same regardless of the audio input's data
+# Goal: Turn off "Note Off" function.
 # ----------------------------------------------------------------------------------
 # Import libraries. 
 from __future__ import print_function
@@ -47,19 +48,6 @@ currentNote = 0
 # MIDI initialization
 port = mido.open_output(portname, autoreset=True)
 # ----------------------------------------------------------------------------------
-# RMS: AMPLITUDE TRACKING ALGORITHM ATTEMPT
-# # may be take out divided by 2?
-# def rms( data ):
-#     count = len(data)/2
-#     format = "%dh"%(count)
-#     shorts = struct.unpack( format, data )
-#     sum_squares = 0.0
-#     for sample in shorts:
-#         n = sample * (1.0/32768)
-#         sum_squares += n*n
-#     return math.sqrt( sum_squares / count )
-
-# ----------------------------------------------------------------------------------
 # define callback function to processing/analysis within this function definition. 
 def callback(in_data, frame_count, time_info, flag):
 
@@ -72,11 +60,6 @@ def callback(in_data, frame_count, time_info, flag):
     confidence = pitch_o.get_confidence()
     type(pitch)
 
-    # print('Using {}'.format(int(pitch)))
-
-    # amplitude = rms(signal)
-    # print(amplitude)
-
     note = int(pitch)
     if note > 127:
         note = 0
@@ -87,9 +70,9 @@ def callback(in_data, frame_count, time_info, flag):
         currentNote = note
         # print("On?")
         on = Message('note_on', note=note)
-        # print('Sending {}'.format(on))
-        if isNoteOn == True
-            port.send(on)
+        print('Sending {}'.format(on))
+        # if isNoteOn == True
+        port.send(on)
         
         # off = Message('note_off', note=note)
         # print('Sending {}'.format(off))

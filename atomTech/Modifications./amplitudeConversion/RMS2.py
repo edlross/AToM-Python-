@@ -1,11 +1,12 @@
 # PURPOSE: To track the audio input's amplitude then scale it to velocity
-    # ALSO adds the velocity to the MIDI "Note On" message
+# Update~ Adds scaling component to be converted to velocity.
 # ----------------------------------------------------------------------------------
 # Import libraries. 
 from __future__ import print_function
 import pyaudio
 import sys
 import numpy as np
+from sklearn.preprocessing import minmax_scale
 import aubio
 import time
 import random
@@ -48,19 +49,6 @@ currentNote = 0
 # MIDI initialization
 port = mido.open_output(portname, autoreset=True)
 # ----------------------------------------------------------------------------------
-# RMS: AMPLITUDE TRACKING ALGORITHM ATTEMPT
-# # may be take out divided by 2?
-# def rms( data ):
-#     count = len(data)/2
-#     format = "%dh"%(count)
-#     shorts = struct.unpack( format, data )
-#     sum_squares = 0.0
-#     for sample in shorts:
-#         n = sample * (1.0/32768)
-#         sum_squares += n*n
-#     return math.sqrt( sum_squares / count )
-
-# ----------------------------------------------------------------------------------
 # define callback function to processing/analysis within this function definition. 
 def callback(in_data, frame_count, time_info, flag):
 
@@ -74,15 +62,26 @@ def callback(in_data, frame_count, time_info, flag):
     confidence = pitch_o.get_confidence()
     type(pitch)
 
+    # def scale(velocity):
+    #     if velocity in range(0,127):
+	#         print(velocity)
+	#     else:
+	#         velocity = 127
+    #         print(velocity)
+
     # print('Using {}'.format(int(pitch)))
 
     amplitude = (rms * 100)
+    # amplitude >= 0
+    # velocity = scale(amplitude)
+    # minmax_scale(amplitude, (0, 127), 0, True)
     velocity = int(amplitude)
-    print(velocity)
-
+    # print(velocity)
     note = int(pitch)
     if note > 127:
         note = 0
+    if velocity > 127:
+        velocity = 127
 # *****Possible incorrect format/use of Aubio's onset detection*****
 # Attempt at aubio's onset implementation. Currently doesn't send MIDI to DAW when formatted like this.
     if onset(signal) and not isNoteOn:
@@ -90,7 +89,7 @@ def callback(in_data, frame_count, time_info, flag):
         currentNote = note
         # print("On?")
         on = Message('note_on', note=note, velocity=velocity)
-        # print('Sending {}'.format(on))
+        print('Sending {}'.format(on))
         #if isNoteOn == True
         port.send(on)
         
@@ -98,7 +97,7 @@ def callback(in_data, frame_count, time_info, flag):
         # print('Sending {}'.format(off))
         # port.send(off)
         # time.sleep(0.1)
-    elif isNoteOn:
+    elif velocity < 5:
         isNoteOn = False
         # print("off?")
         off = Message('note_off', note=currentNote)
