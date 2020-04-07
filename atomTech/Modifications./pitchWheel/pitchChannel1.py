@@ -1,4 +1,5 @@
-# PURPOSE: To utilize MIDI's pitch wheel to make the program more accurate and is more naturally expressive with concepts like vibrato.
+# PURPOSE: To track the audio input's amplitude then scale it to velocity
+# Update~ Adds scaling component to be converted to velocity.
 # ----------------------------------------------------------------------------------
 # Import libraries. 
 from __future__ import print_function
@@ -38,7 +39,7 @@ pitch_o = aubio.pitch("default", win_s, hop_s, samplerate)
 # initializes onset to onset detection function.
 onset = aubio.onset("default", win_s, hop_s, samplerate)
 # Converts frequencies to MIDI numbers.
-pitch_o.set_unit("midi") 
+pitch_o.set_unit("Hz") 
 # Sets sensitivity of pitch detection.
 pitch_o.set_tolerance(tolerance)
 pitch = 0
@@ -47,19 +48,6 @@ currentNote = 0
 # MIDI initialization
 port = mido.open_output(portname, autoreset=True)
 # ----------------------------------------------------------------------------------
-# RMS: AMPLITUDE TRACKING ALGORITHM ATTEMPT
-# # may be take out divided by 2?
-# def rms( data ):
-#     count = len(data)/2
-#     format = "%dh"%(count)
-#     shorts = struct.unpack( format, data )
-#     sum_squares = 0.0
-#     for sample in shorts:
-#         n = sample * (1.0/32768)
-#         sum_squares += n*n
-#     return math.sqrt( sum_squares / count )
-
-# ----------------------------------------------------------------------------------
 # define callback function to processing/analysis within this function definition. 
 def callback(in_data, frame_count, time_info, flag):
 
@@ -67,52 +55,56 @@ def callback(in_data, frame_count, time_info, flag):
 
     audio_data = np.fromstring(in_data, dtype=np.float32)
     signal = np.frombuffer(audio_data, dtype=np.float32)
-            
+    rms = np.sqrt(np.mean(np.absolute(signal)**2))
+
     pitch = pitch_o(signal)[0]
     confidence = pitch_o.get_confidence()
     type(pitch)
 
-    # print('Using {}'.format(int(pitch)))
+    def scale(num, minNum, maxNum, scaleMin = 0, scaleMax = 127):
 
-    # amplitude = rms(signal)
-    # print(amplitude)
+        if num <= minNum:
+            num = scaleMin
 
-    note = int(pitch)
+        if num >= maxNum:
+            num = scaleMax
+
+        return (num-minNum)/(maxNum-minNum) * (scaleMax-scaleMin) + scaleMin
+
+    if pitch == 0:
+        pitch = 1
+
+    mNote = (69 + 12 * np.log2(pitch/440))
+
+    remainder =  mNote % 1
+
+    pitchBend = int(scale(remainder, 0, 0.5, -8192, 8191))
+
+    print(mNote, remainder)
+
+
+    amplitude = scale(rms, 0, 1, 0, 127)
+    velocity = int(amplitude)
+
+    note = int(mNote)
     if note > 127:
         note = 0
-# *****Possible incorrect format/use of Aubio's onset detection*****
-# Attempt at aubio's onset implementation. Currently doesn't send MIDI to DAW when formatted like this.
+
+    if velocity > 127:
+        velocity = 127
+    
     if onset(signal) and not isNoteOn:
         isNoteOn = True
         currentNote = note
-        # print("On?")
-        on = Message('note_on', note=note)
+        on = Message('note_on', note=note, velocity=velocity)
         # print('Sending {}'.format(on))
-        if isNoteOn == True
-            port.send(on)
+        port.send(on)
         
-        # off = Message('note_off', note=note)
-        # print('Sending {}'.format(off))
-        # port.send(off)
-        # time.sleep(0.1)
-    elif isNoteOn:
+    elif velocity < 5:
         isNoteOn = False
-        # print("off?")
         off = Message('note_off', note=currentNote)
         # print('Sending {}'.format(off))
         port.send(off)
-    
-        # if note > 0:
-        #     on = Message('note_on', note=note)
-        #     print('Sending {}'.format(on))
-        #     port.send(on)
-
-        #     off = Message('note_off', note=note)
-        #     print('Sending {}'.format(off))
-        #     port.send(off)
-        #     time.sleep(0.1)
-        # else:
-        #         off = Message('note_off', note=note)
 
     return (in_data, pyaudio.paContinue)
 # ----------------------------------------------------------------------------------
@@ -140,4 +132,3 @@ stream.stop_stream()
 stream.close()
 p.terminate()
 # ----------------------------------------------------------------------------------
-
