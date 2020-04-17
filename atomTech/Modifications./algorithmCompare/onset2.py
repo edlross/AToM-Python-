@@ -6,6 +6,7 @@ from __future__ import print_function
 import pyaudio
 import sys
 import numpy as np
+from sklearn.preprocessing import minmax_scale
 import aubio
 import time
 import random
@@ -39,20 +40,20 @@ pitch_o = aubio.pitch("default", win_s, hop_s, samplerate)
 # initializes onset to onset detection function.
 onset = aubio.onset("wphase", win_s, hop_s, samplerate)
 # Converts frequencies to MIDI numbers.
-pitch_o.set_unit("Hz") 
+pitch_o.set_unit("midi") 
 # Sets sensitivity of pitch detection.
 pitch_o.set_tolerance(tolerance)
 pitch = 0
 isNoteOn = False
 currentNote = 0
+prevNote = 0
 # MIDI initialization
 port = mido.open_output(portname, autoreset=True)
 # ----------------------------------------------------------------------------------
 # define callback function to processing/analysis within this function definition. 
 def callback(in_data, frame_count, time_info, flag):
-# -------------------------------------------
-# Initialize functions and variables within Callback
-    global pitch, isNoteOn, currentNote, port
+
+    global pitch, isNoteOn, currentNote, port, prevNote
 
     audio_data = np.fromstring(in_data, dtype=np.float32)
     signal = np.frombuffer(audio_data, dtype=np.float32)
@@ -64,70 +65,44 @@ def callback(in_data, frame_count, time_info, flag):
 
     def scale(num, minNum, maxNum, scaleMin = 0, scaleMax = 127):
 
-        if num <= minNum:
-            num = scaleMin
+            if num <= minNum:
+                num = scaleMin
 
-        if num >= maxNum:
-            num = scaleMax
+            if num >= maxNum:
+                num = scaleMax
 
-        return (num-minNum)/(maxNum-minNum) * (scaleMax-scaleMin) + scaleMin
+            return (num-minNum)/(maxNum-minNum) * (scaleMax-scaleMin) + scaleMin
 
-# -------------------------------------------
-
-    if pitch == 0:
-        pitch = 1
-
-    ftom = aubio.freqtomidi(pitch)
-
-    remainder = ftom % 1
-
-    if remainder > 0.5:
-        mNote = ftom + 1
-    else:
-        mNote = ftom
-
-    mFreq = aubio.miditofreq(int(mNote))
-
-    if mFreq == 0:
-        mFreq = 1
-
-    
-    ratio =  pitch/mFreq
-
-    bend = int(4096 *(12 * np.log2(ratio)))
-
-# -------------------------------------------
 
     amplitude = scale(rms, 0, 1, 0, 127)
 
     velocity = int(amplitude)
 
-    note = int(mNote)
+    note = int(pitch)
     if note > 127:
-        note = 0
-    if note == 1:
         note = 0
 
     if velocity > 127:
         velocity = 127
 
-    if bend > 8191:
-        bend = 8191
-    if bend < -8192:
-        bend = -8192
+    prevNote = note 
+    # def octaveOp(direction, shiftAmount):
+    #     shiftAmount = shiftAmount * 12
 
-# -------------------------------------------
-
+    #     if direction == up:
+    #         notes + shiftAmount
+    #     elif direction == down:
+    #         notes + shiftAmount
+    #     if notes < 24: 
+    #         shiftAmount = 0
+    print(note, prevNote)
+# Attempt at aubio's onset implementation. Currently doesn't send MIDI to DAW when formatted like this.
     if onset(signal) and not isNoteOn:
         isNoteOn = True
         currentNote = note
         on = Message('note_on', note=note, velocity=velocity)
-        # pitchWheel = mido.Message('pitchwheel', pitch=bend)
         print('Sending {}'.format(on))
-        # print('Sending {}'.format(pitchWheel))
         port.send(on)
-        # port.send(pitchWheel)
-        
         
     elif velocity < 5:
         isNoteOn = False
@@ -161,3 +136,4 @@ stream.stop_stream()
 stream.close()
 p.terminate()
 # ----------------------------------------------------------------------------------
+

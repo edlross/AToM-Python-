@@ -47,7 +47,7 @@ hop_s = buffer_size # hop size
 # initializes pitch_o to pitch detection function.
 pitch_o = aubio.pitch("default", win_s, hop_s, samplerate)
 # initializes onset to onset detection function.
-onset = aubio.onset("default", win_s, hop_s, samplerate)
+onset = aubio.onset("wphase", win_s, hop_s, samplerate)
 # Converts frequencies to MIDI numbers.
 pitch_o.set_unit("midi") 
 # Sets sensitivity of pitch detection.
@@ -94,15 +94,15 @@ def callback(in_data, frame_count, time_info, flag):
     if velocity > 127:
         velocity = 127
 
-    # def octaveOp(direction, shiftAmount):
-    #     shiftAmount = shiftAmount * 12
+    def octaveOp(direction, shiftAmount):
+        shiftAmount = shiftAmount * 12
 
-    #     if direction == up:
-    #         notes + shiftAmount
-    #     elif direction == down:
-    #         notes + shiftAmount
-    #     if notes < 24: 
-    #         shiftAmount = 0
+        if direction == up:
+            notes + shiftAmount
+        elif direction == down:
+            notes + shiftAmount
+        if notes < 24: 
+            shiftAmount = 0
     
 
 # Attempt at aubio's onset implementation. Currently doesn't send MIDI to DAW when formatted like this.
@@ -112,6 +112,13 @@ def callback(in_data, frame_count, time_info, flag):
         on = Message('note_on', note=note, velocity=velocity)
         print('Sending {}'.format(on))
         port.send(on)
+        prevNote=note
+        if note != prevNote:
+            isNoteOn = True
+            currentNote = note
+            on = Message('note_on', note=note, velocity=velocity)
+            print('Sending {}'.format(on))
+            port.send(on)
         
     elif velocity < 5:
         isNoteOn = False
@@ -145,8 +152,8 @@ while True:
                 wx.Panel.__init__(self, parent)
 
                 self.port = wx.StaticText(self, label="Port:")
-                self.note_sent = wx.StaticText(self, label="Note", pos = (250, 225))
-                self.dialing_status = wx.StaticText(self, label="Velocity", pos = (250, 250))
+                self.note_sent = wx.StaticText(self, label="Note", pos = (250 225))
+                self.dialing_status = wx.StaticText(self, label="Velocity", pos = (250,250))
                 self.SetBackgroundColour((147, 136, 136))
                 self.tbtn = wx.ToggleButton(self, -1, "Start Stream", pos = (200,200))
                 self.tbtn.Bind(wx.EVT_TOGGLEBUTTON, self.onUpdate)

@@ -34,11 +34,11 @@ pyaudio_format = pyaudio.paFloat32
 n_channels = 1
 samplerate = 44100
 # ----------------------------------------------------------------------------------
-# # Let user choose MIDI Port
-# if len(sys.argv) > 1:
-#     portname = sys.argv[1]
-# else:
-#     portname = None  # Use default port
+# Let user choose MIDI Port
+if len(sys.argv) > 1:
+    portname = sys.argv[1]
+else:
+    portname = None  # Use default port
 # ----------------------------------------------------------------------------------
 # set audio analysis variables and definitions.
 tolerance = 1.
@@ -47,7 +47,7 @@ hop_s = buffer_size # hop size
 # initializes pitch_o to pitch detection function.
 pitch_o = aubio.pitch("default", win_s, hop_s, samplerate)
 # initializes onset to onset detection function.
-onset = aubio.onset("default", win_s, hop_s, samplerate)
+onset = aubio.onset("phase", win_s, hop_s, samplerate)
 # Converts frequencies to MIDI numbers.
 pitch_o.set_unit("midi") 
 # Sets sensitivity of pitch detection.
@@ -57,7 +57,7 @@ isNoteOn = False
 currentNote = 0
 prevNote=0
 # MIDI initialization
-port = mido.open_output('atomCtrl', virtual = True, autoreset=True)
+port = mido.open_output(portname, autoreset=True)
 # ----------------------------------------------------------------------------------
 # define callback function to processing/analysis within this function definition. 
 def callback(in_data, frame_count, time_info, flag):
@@ -94,15 +94,15 @@ def callback(in_data, frame_count, time_info, flag):
     if velocity > 127:
         velocity = 127
 
-    # def octaveOp(direction, shiftAmount):
-    #     shiftAmount = shiftAmount * 12
+    def octaveOp(direction, shiftAmount):
+        shiftAmount = shiftAmount * 12
 
-    #     if direction == up:
-    #         notes + shiftAmount
-    #     elif direction == down:
-    #         notes + shiftAmount
-    #     if notes < 24: 
-    #         shiftAmount = 0
+        if direction == up:
+            notes + shiftAmount
+        elif direction == down:
+            notes + shiftAmount
+        if notes < 24: 
+            shiftAmount = 0
     
 
 # Attempt at aubio's onset implementation. Currently doesn't send MIDI to DAW when formatted like this.

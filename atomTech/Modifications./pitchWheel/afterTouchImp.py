@@ -45,6 +45,7 @@ pitch_o.set_tolerance(tolerance)
 pitch = 0
 isNoteOn = False
 currentNote = 0
+preVelocity = 0
 # MIDI initialization
 port = mido.open_output(portname, autoreset=True)
 # ----------------------------------------------------------------------------------
@@ -52,7 +53,7 @@ port = mido.open_output(portname, autoreset=True)
 def callback(in_data, frame_count, time_info, flag):
 # -------------------------------------------
 # Initialize functions and variables within Callback
-    global pitch, isNoteOn, currentNote, port
+    global pitch, isNoteOn, currentNote, port, preVelocity
 
     audio_data = np.fromstring(in_data, dtype=np.float32)
     signal = np.frombuffer(audio_data, dtype=np.float32)
@@ -122,11 +123,12 @@ def callback(in_data, frame_count, time_info, flag):
         isNoteOn = True
         currentNote = note
         on = Message('note_on', note=note, velocity=velocity)
+        preVelocity = velocity
         # pitchWheel = mido.Message('pitchwheel', pitch=bend)
-        if velocity != velocity:
+        if velocity != preVelocity:
             aftertouch = mido.Message('aftertouch', value=velocity)
             print('Sending {}'.format(aftertouch))
-        #     port.send(aftertouch)
+            port.send(aftertouch)
         print('Sending {}'.format(on))
         # print('Sending {}'.format(pitchWheel))
         port.send(on)
@@ -135,7 +137,7 @@ def callback(in_data, frame_count, time_info, flag):
     elif velocity < 5:
         isNoteOn = False
         off = Message('note_off', note=currentNote)
-        # print('Sending {}'.format(off))
+        print('Sending {}'.format(off))
         port.send(off)
 
     return (in_data, pyaudio.paContinue)

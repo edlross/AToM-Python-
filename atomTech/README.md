@@ -18,10 +18,10 @@ The purpose of this program is to convert audio from a given input into a MIDI m
 The ATOM program takes a signal from the given audio input, analyzes the pitch and amplitude, then converts that information into MIDI Note and Velocity. The program then sends the data as a MIDI Message to the user's desired MIDI port, which makes the program accessible as a MIDI controller.
 
 ### Caveats
-Recognition of some timbres and registers are faulty. Velocity needs to properly be scaled to 127, as it currently is not scaled. Velocity also needs to be constantly updated so program can respond to musicians' changes in dynamics. Accuracy could be better.
+Recognition of some timbres and registers are faulty, future implementation will include presets for different instruments. In this version of the software, aftertouch needs to be implemented. Aftertouch and pitch wheel parameters are both attempted inside of the "Modifications." folder.
 
 ### Dependencies
-This program requires the Aubio and Mido python libraries. 
+This program requires the Aubio, wxPython, and Mido python libraries. 
 	
 ### Acknowledgements
 I have had much help from Professor Akito Van Troyer. I also have utilized the algorithms found in Aubio and Mido.

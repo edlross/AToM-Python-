@@ -14,6 +14,7 @@ import mido
 from mido import Message
 from time import sleep
 import struct
+import wxPy
 
 # initialise pyaudio
 p = pyaudio.PyAudio()
@@ -122,6 +123,11 @@ stream = p.open(format=pyaudio_format,
 stream.start_stream()
 # ----------------------------------------------------------------------------------
 # We will put our UI stuff in this while loop
+
+wx = wxPy
+# wx.app
+# wx.frm.Show()
+wx.MainLoop()
 while True:
     try:
         print("We will put UI here...")
