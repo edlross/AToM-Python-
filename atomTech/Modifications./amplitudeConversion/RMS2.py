@@ -14,7 +14,7 @@ import mido
 from mido import Message
 from time import sleep
 import struct
-import wxPy
+# import wxPy
 
 # initialise pyaudio
 p = pyaudio.PyAudio()
@@ -103,6 +103,7 @@ def callback(in_data, frame_count, time_info, flag):
         on = Message('note_on', note=note, velocity=velocity)
         print('Sending {}'.format(on))
         port.send(on)
+        print(velocity)
         
     elif velocity < 5:
         isNoteOn = False
@@ -124,13 +125,12 @@ stream.start_stream()
 # ----------------------------------------------------------------------------------
 # We will put our UI stuff in this while loop
 
-wx = wxPy
-# wx.app
-# wx.frm.Show()
-wx.MainLoop()
+# wx = wxPy
 while True:
     try:
-        print("We will put UI here...")
+        # wx.app
+        # wx.frm.Show()
+        # wx.MainLoop()
         sleep(1)
     except KeyboardInterrupt:
         print("*** Ctrl+C pressed, exiting...")
