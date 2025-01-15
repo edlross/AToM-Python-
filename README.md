@@ -1,9 +1,8 @@
-__UNDERGRAD SENIOR CAPSTONE PROJECT__
-# EP-491
+__Audio to MIDI Converter PROJECT__
 
-### Edward Ross
+### Ed Ross
 
-### Uploaded on:
+### Uploaded originally on:
 2:45PM on 3/26/2020
 
 ### Audio to MIDI Controller Project
