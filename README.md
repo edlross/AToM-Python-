@@ -1,6 +1,5 @@
-__Audio to MIDI Converter PROJECT__
-
-### Ed Ross
+#Audio to MIDI Converter PROJECT
+## Ed Ross
 
 ### Uploaded originally on:
 2:45PM on 3/26/2020
