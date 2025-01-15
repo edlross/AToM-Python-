@@ -21,7 +21,4 @@ The ATOM program takes a signal from the given audio input, analyzes the pitch a
 Recognition of some timbres and registers are faulty, future implementation will include presets for different instruments. In this version of the software, aftertouch needs to be implemented. Aftertouch and pitch wheel parameters are both attempted inside of the "Modifications." folder.
 
 ### Dependencies
-This program requires the Aubio, wxPython, and Mido python libraries. 
-	
-### Acknowledgements
-I have had much help from Professor Akito Van Troyer. I also have utilized the algorithms found in Aubio and Mido.
+This program requires the Aubio, wxPython, and Mido python libraries.
